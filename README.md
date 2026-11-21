@@ -1,8 +1,8 @@
-# CatWaalking
+# CatWalking
 
 One-page interactive website for the cat datawalk project: **are all cats either black or orange?**
 
-Live site (after GitHub Pages is switched on): `https://regitata.github.io/CatWaalking/`
+Live site (after GitHub Pages is switched on): `https://regitata.github.io/CatWalking/`
 
 ## Sections
 1. **Opening**: walking into a Jabodetabek *gang*, with bobble-head cats. Moves on after 2 seconds or when you scroll.

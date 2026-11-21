@@ -1,4 +1,4 @@
-/* CatWaalking: page behaviour. Data lives in data.js (window.CW). */
+/* CatWalking: page behaviour. Data lives in data.js (window.CW). */
 (() => {
   'use strict';
   const CW = window.CW;
@@ -431,7 +431,7 @@
         <text x="540" y="150" text-anchor="middle" font-family="Londrina Solid, sans-serif" font-weight="900" font-size="84" fill="#4B53E6" stroke="#fff" stroke-width="14" paint-order="stroke fill">${esc(d.name || 'MY CATWALK').toUpperCase()}</text>
         <text x="540" y="210" text-anchor="middle" font-family="sans-serif" font-size="30" fill="#2B2420">${total} cats · ${d.km} km · black or orange?</text>
         <g transform="translate(540 720) scale(1.55)">${pieSvg}</g>
-        <text x="540" y="1290" text-anchor="middle" font-family="sans-serif" font-size="24" fill="#2F5BD3">CatWaalking: a cat datawalk</text></svg>`;
+        <text x="540" y="1290" text-anchor="middle" font-family="sans-serif" font-size="24" fill="#2F5BD3">CatWalking: a cat datawalk</text></svg>`;
       const img = new Image();
       img.onload = () => {
         const c = document.createElement('canvas'); c.width = 1080; c.height = 1350;

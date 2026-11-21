@@ -1,4 +1,4 @@
-/* CatWaalking data. Edit numbers/text here. */
+/* CatWalking data. Edit numbers/text here. */
 window.CW = {
   // Datawalk result: 22 cats. key = colour category; n = 1st approach (1 sleepy/not scared, 2 scared, 3 friendly);
   // l = 2nd approach (A eats in front of me, B waits until I leave); h = 3rd approach (more = asks for more / follows me, eating = keeps eating)
