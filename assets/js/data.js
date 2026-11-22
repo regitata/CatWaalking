@@ -7,7 +7,7 @@ window.CW = {
   // Black vs orange split shown first in Our Result (percent)
   blackOrange: { black: 68, orange: 32 },
   // Google Apps Script web-app URL that saves a copy of each downloaded landscape picture to Drive (see tools/drive-archive.gs). Leave '' to switch off.
-  archiveUrl: '',
+  archiveUrl: 'https://script.google.com/macros/s/AKfycbwCZYadNY7MSD3uSC0M0YrMapW3yz3jA2dAnbuSw_2qf1dK3jV5HPtt4OFM3rfFlnAZ/exec',
   categories: [
     { key: 'black',   label: 'Black / grey',            fill: '#1E1B1C', note: 'note_6' },
     { key: 'tabby',   label: 'Brown tabby',             fill: 'url(#p-tabby)', note: 'note_9' },
