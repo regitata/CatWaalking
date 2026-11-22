@@ -271,7 +271,7 @@ mark { background: none; padding: 0 .08em; }
 @media (hover: none) { .scat-x { opacity: .9; width: 24px; height: 24px; } }
 .street-tip { font-size: 16px; margin: 6px 0 0; }
 .dl-box { margin-top: 18px; display: grid; justify-items: start; gap: 8px; position: relative; }
-.dl-menu { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; width: 100%; max-width: 560px; }
+.dl-menu { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; width: 100%; max-width: 560px; }
 .dl-menu[hidden] { display: none; }
 .dl-menu button { border: 2px solid rgba(47, 91, 211, .25); background: #fff; border-radius: 14px; padding: 12px; cursor: pointer; text-align: left; display: grid; gap: 2px; box-shadow: var(--shadow); transition: transform .15s, border-color .15s; }
 .dl-menu button:hover { transform: translateY(-2px); border-color: var(--blue); }

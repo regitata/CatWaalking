@@ -467,6 +467,24 @@
         x.fillStyle = c.resident ? '#2F5BD3' : '#fff'; x.textAlign = 'center'; x.fillText(c.name, fx, ty - fs * 0.05);
       }
     }
+    function igIcon(x, cx, cy, size, color) {   // small Instagram glyph
+      const r = size / 2;
+      x.save(); x.strokeStyle = color; x.fillStyle = color; x.lineWidth = size * 0.11;
+      roundRect(x, cx - r, cy - r, size, size, size * 0.28); x.stroke();
+      x.beginPath(); x.arc(cx, cy, size * 0.23, 0, Math.PI * 2); x.stroke();
+      x.beginPath(); x.arc(cx + size * 0.27, cy - size * 0.27, size * 0.07, 0, Math.PI * 2); x.fill();
+      x.restore();
+    }
+    function credit(x, right, baseline, size, color) {   // "CatWalking · created by [ig] biro_info", right-aligned
+      x.font = `500 ${size}px "DM Sans", sans-serif`; x.textAlign = 'left'; x.fillStyle = color;
+      const a = 'CatWalking · created by ', b = 'biro_info', ic = size * 1.05, gap = size * 0.35;
+      const wa = x.measureText(a).width, wb = x.measureText(b).width, total = wa + ic + gap + wb;
+      const left = right - total;
+      x.fillText(a, left, baseline);
+      igIcon(x, left + wa + ic / 2, baseline - size * 0.36, ic, color);
+      x.fillText(b, left + wa + ic + gap, baseline);
+      return total;
+    }
     async function renderLandscape(W = 1600, phase = null) {
       await document.fonts.load('900 40px "Londrina Solid"');
       const s = W / 1600, H = Math.round(900 * s);
@@ -475,15 +493,16 @@
       x.drawImage(await getImg(IMG('street')), 0, 0, W, H);
       await drawCats(x, s, 0, 0, phase);
       outlinedText(x, "MY CAT'S GANG", 36 * s, 92 * s, 76 * s, '#4B53E6', '#fff', 'left');
-      x.font = `500 ${22 * s}px "DM Sans", sans-serif`; x.textAlign = 'right'; x.fillStyle = 'rgba(255,255,255,.92)';
-      roundRect(x, W - 360 * s, H - 54 * s, 336 * s, 38 * s, 19 * s); x.fill();
-      x.fillStyle = '#2F5BD3'; x.fillText('CatWalking · a cat datawalk', W - 40 * s, H - 28 * s);
+      x.font = `500 ${22 * s}px "DM Sans", sans-serif`;
+      const cw = x.measureText('CatWalking · created by biro_info').width + 30 * s;
+      x.fillStyle = 'rgba(255,255,255,.94)'; roundRect(x, W - cw - 48 * s, H - 56 * s, cw + 24 * s, 40 * s, 20 * s); x.fill();
+      credit(x, W - 36 * s, H - 29 * s, 22 * s, '#2F5BD3');
       return c;
     }
-    async function renderPortrait() {
+    async function renderPortrait(k = 1, phase = null) {
       await document.fonts.load('900 40px "Londrina Solid"');
-      const W = 1080, H = 1920, c = document.createElement('canvas'); c.width = W; c.height = H;
-      const x = c.getContext('2d');
+      const W = 1080, H = 1920, c = document.createElement('canvas'); c.width = Math.round(W * k); c.height = Math.round(H * k);
+      const x = c.getContext('2d'); x.scale(k, k);
       x.fillStyle = '#F4EBDA'; x.fillRect(0, 0, W, H);
       const grid = await getImg(IMG('grid'));
       for (let gy = 0; gy < H; gy += 608) for (let gx = 0; gx < W; gx += 1080) x.drawImage(grid, gx, gy, 1080, 608);
@@ -492,7 +511,7 @@
       const sq = 1000, X0 = (W - sq) / 2, Y0 = 430, s = sq / 1600;
       x.save(); roundRect(x, X0, Y0, sq, sq, 36); x.clip();
       x.drawImage(await getImg(IMG('street_full')), X0, Y0, sq, sq);
-      await drawCats(x, s, X0, Y0 + CROP_Y * s, null);
+      await drawCats(x, s, X0, Y0 + CROP_Y * s, phase);
       x.restore();
       x.lineWidth = 8; x.strokeStyle = '#fff'; roundRect(x, X0, Y0, sq, sq, 36); x.stroke();
       x.font = '500 40px "DM Sans", sans-serif'; x.textAlign = 'center'; x.fillStyle = '#2B2420';
@@ -502,15 +521,16 @@
       const words = names.split(' '); let line = '', ly = 1600;
       for (const wd of words) { if (x.measureText(line + wd).width > 940) { x.fillText(line.trim(), W / 2, ly); line = ''; ly += 56; } line += wd + ' '; }
       if (line.trim()) x.fillText(line.trim(), W / 2, ly);
-      x.font = '500 32px "DM Sans", sans-serif'; x.fillStyle = '#2F5BD3'; x.fillText('CatWalking · are all cats black or orange?', W / 2, 1840);
+      x.font = '500 34px "DM Sans", sans-serif'; const tw = x.measureText('CatWalking · created by biro_info').width + 36 + 12;
+      credit(x, W / 2 + tw / 2, 1840, 34, '#2F5BD3');
       return c;
     }
-    async function renderGif() {
+    async function renderGif(kind) {
       const { GIFEncoder, quantize, applyPalette } = await import(new URL('assets/js/vendor/gifenc.esm.js', document.baseURI).href);
       const gif = GIFEncoder(), frames = 12;
       for (let i = 0; i < frames; i++) {
         dlStatus.textContent = `Making your GIF… ${Math.round((i / frames) * 100)}%`;
-        const c = await renderLandscape(800, i / frames);
+        const c = kind === 'portrait' ? await renderPortrait(0.5, i / frames) : await renderLandscape(960, i / frames);
         const data = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
         const palette = quantize(data, 256), index = applyPalette(data, palette);
         gif.writeFrame(index, c.width, c.height, { palette, delay: 90 });
@@ -537,9 +557,7 @@
       menu.hidden = true; dlBtn.setAttribute('aria-expanded', 'false'); dlBtn.disabled = true;
       dlStatus.textContent = 'Drawing your gang…';
       try {
-        if (fmt === 'gif') saveBlob(await renderGif(), 'my-cats-gang.gif');
-        else if (fmt === 'portrait') saveBlob(await toBlob(await renderPortrait()), 'my-cats-gang-story.png');
-        else saveBlob(await toBlob(await renderLandscape(1600, null)), 'my-cats-gang.png');
+        saveBlob(await renderGif(fmt), fmt === 'portrait' ? 'my-cats-gang-story.gif' : 'my-cats-gang.gif');
         dlStatus.textContent = 'Downloaded! 🐾';
         archive(fmt);
       } catch (e) { console.error(e); dlStatus.textContent = 'Sorry, the download did not work. Please try again.'; }

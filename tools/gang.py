@@ -127,7 +127,7 @@ tops = {}
 for X, zs in ((-1, leftZ), (1, rightZ)):
     segs = list(zip(zs[:-1], zs[1:]))
     for i, (z0, z1) in reversed(list(enumerate(segs))):
-        h = rng.choice([2.7, 3.0, 2.85, 1.75, 2.9]) if i > 0 else 3.1
+        h = rng.choice([2.7, 3.0, 2.85, 2.6, 2.9]) if i > 0 else 3.1
         k = kinds[(i + (0 if X < 0 else 2)) % len(kinds)]
         tops[(X, i)] = segment(X, z0, z1, k, WALLS[(i * 2 + (0 if X < 0 else 1)) % len(WALLS)], h)
 # plants & props
