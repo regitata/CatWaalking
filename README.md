@@ -11,7 +11,7 @@ Live site (after GitHub Pages is switched on): `https://regitata.github.io/CatWa
 4. **We took a datawalk**: the route map, with cats you can tap.
 5. **The Method**: three feeding approaches; tap a bubble to enlarge it and see the counts.
 6. **Our Result**: black-or-orange pie (68% / 32%) and a colour-details pie, stats, and all 22 cats with their badges.
-7. **Import The Cats**: visitors upload a cat photo, name it, and it moves into the gang. Cats can be dragged and removed, and the gang can be downloaded as a GIF, a landscape picture or a portrait picture (for IG stories).
+7. **Import The Cats**: visitors upload a cat photo, name it, and it moves into the gang. Cats can be dragged and removed, and the gang can be downloaded as an animated GIF, landscape or IG-story portrait.
 8. **Let's do the Catwalk**: visitors enter their own survey and get a pie chart (downloadable as PNG).
 
 ## Editing
