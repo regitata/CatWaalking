@@ -156,7 +156,7 @@ pb = P(X, YG, zs); pt = P(X, YG - 1.35, zs)
 s = F / zs
 LAYERS['near'].append(line(pb, pt, 0.035 * s, '#6E7787'))
 sx, sy = pt[0] - 0.02 * s, pt[1] - 0.06 * s
-LAYERS['near'].append(f'<g transform="translate({sx:.1f} {sy:.1f}) scale({s/400:.3f})"><rect x="0" y="0" width="230" height="74" rx="6" fill="#2F7A4F" stroke="#FFFFFF" stroke-width="6"/><text x="115" y="54" text-anchor="middle" font-family="Londrina Solid, sans-serif" font-weight="900" font-size="50" fill="#FFFFFF" letter-spacing="2">GG. KUCING</text></g>')
+LAYERS['near'].append(f'<g transform="translate({sx:.1f} {sy:.1f}) scale({s/400:.3f})"><rect x="0" y="0" width="230" height="74" rx="6" fill="#2F7A4F" stroke="#FFFFFF" stroke-width="6"/><text x="115" y="54" text-anchor="middle" font-family="Londrina Solid, sans-serif" font-weight="900" font-size="48" fill="#FFFFFF" textLength="196" lengthAdjust="spacingAndGlyphs">GG. KUCING</text></g>')
 
 defs = f'''<defs>
 <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#DCE6FF"/><stop offset=".6" stop-color="#F4EBDA"/></linearGradient>

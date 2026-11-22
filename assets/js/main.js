@@ -241,17 +241,25 @@
       <div class="stat"><b>${carry} / ${total}</b><span>had black, orange, or both somewhere in their fur</span></div>
       <div class="stat wide"><b>Not quite a myth, not quite true.</b><span>Most cats weren't <i>only</i> black or orange, but nearly all of them were made of black, orange, or a mix of both.</span></div>`;
 
-    const myth = [{ key: 'mb', label: 'Black?', fill: '#1E1B1C', value: 1, valueLabel: '50%' }, { key: 'mo', label: 'Orange?', fill: '#E8893A', value: 1, valueLabel: '50%' }];
+    const BO = CW.blackOrange;
+    const boItems = [
+      { key: 'bo-black', label: 'Black', fill: '#1E1B1C', value: BO.black, valueLabel: BO.black + '%' },
+      { key: 'bo-orange', label: 'Orange', fill: '#E8893A', value: BO.orange, valueLabel: BO.orange + '%' }
+    ];
+    const legendReal = legend.innerHTML;
+    const legendBO = boItems.map((it) => `<li data-key="${it.key}"><span class="sw">${swatch(it.fill)}</span><span>${it.label}</span><span class="ct">${it.valueLabel}</span></li>`).join('');
+    const bindLegend = () => $$('li', legend).forEach((li) => { li.addEventListener('mouseenter', () => hover(li.dataset.key)); li.addEventListener('mouseleave', () => hover(null)); li.addEventListener('click', () => hover(li.dataset.key)); });
     const show = (which) => {
-      $('#tabMyth').setAttribute('aria-selected', String(which === 'myth'));
+      $('#tabBO').setAttribute('aria-selected', String(which === 'bo'));
       $('#tabReal').setAttribute('aria-selected', String(which === 'real'));
-      legend.style.opacity = which === 'myth' ? 0.35 : 1;
-      drawPie(pie, which === 'myth' ? myth : realItems(counts), { onHover: which === 'real' ? hover : null });
+      legend.innerHTML = which === 'bo' ? legendBO : legendReal;
+      bindLegend();
+      drawPie(pie, which === 'bo' ? boItems : realItems(counts), { onHover: hover });
     };
-    $('#tabMyth').addEventListener('click', () => show('myth'));
+    $('#tabBO').addEventListener('click', () => show('bo'));
     $('#tabReal').addEventListener('click', () => show('real'));
     let shown = false;
-    new IntersectionObserver((en, obs) => { if (en[0].isIntersecting && !shown) { shown = true; show('myth'); setTimeout(() => show('real'), 1900); obs.disconnect(); } }, { threshold: 0.35 }).observe(pie);
+    new IntersectionObserver((en, obs) => { if (en[0].isIntersecting && !shown) { shown = true; show('bo'); obs.disconnect(); } }, { threshold: 0.35 }).observe(pie);
 
     const rowsOrder = ['black', 'tabby', 'ginger', 'tortie', 'orwh', 'unknown', 'white'];
     const A = CW.approaches;
@@ -278,31 +286,79 @@
   /* ================= 7. IMPORT THE CATS ================= */
   (function importCats() {
     const street = $('#street'), form = $('#importForm'), file = $('#catFile'), preview = $('#catPreview'), dropText = $('#dropText'), status = $('#importStatus'), btn = $('#importBtn'), drop = $('#drop');
-    const KEY = 'cw-imported-cats';
-    let cats = store.get(KEY, []);
-    const residents = [
-      { name: 'Oyen', src: IMG('route_cat_176'), ar: 333 / 283, z: 2.6, X: -0.45, resident: true },
-      { name: 'Belang', src: IMG('route_cat_175'), ar: 284 / 549, z: 3.6, X: 0.4, resident: true }
+    const KEY = 'cw-street-v2', OLD_KEY = 'cw-imported-cats';
+    const CROP_Y = 500;                       // street.webp is the gang stage cropped from y=500 to y=1400
+    const Z_MIN = 1.35, Z_MAX = 8;            // nearest / furthest a cat can stand
+    const groundY = (z) => VPY + (YG * F) / z - CROP_Y;             // feet position (street coords) for a depth
+    const zFromY = (y) => (YG * F) / (y + CROP_Y - VPY);
+    const sizeOf = (c) => { const h = (0.55 * F) / c.z; return { h, w: h * c.ar }; };
+    const uid = () => Math.random().toString(36).slice(2, 9);
+    const defaults = () => [
+      { id: 'oyen', name: 'Oyen', src: IMG('route_cat_176'), ar: 333 / 283, z: 2.6, sx: 800 - (0.45 * F) / 2.6, resident: true },
+      { id: 'belang', name: 'Belang', src: IMG('route_cat_175'), ar: 284 / 549, z: 3.6, sx: 800 + (0.4 * F) / 3.6, resident: true }
     ];
+    let cats = store.get(KEY, null);
+    if (!cats) {   // first visit, or migrate cats saved by the first version of the site
+      cats = defaults().concat(store.get(OLD_KEY, []).map((c) => ({ id: uid(), name: c.name, src: c.src, ar: c.ar, z: c.z, sx: 800 + (c.X * F) / c.z })));
+      store.set(KEY, cats);
+    }
+    const save = () => store.set(KEY, cats);
     const setStatus = (t) => { status.textContent = t; };
+
+    function layout(el, c) {
+      const { h, w } = sizeOf(c);
+      Object.assign(el.style, { left: pct(c.sx - w / 2, 1600), top: pct(groundY(c.z) - h, 900), width: pct(w, 1600), height: pct(h, 900), zIndex: Math.round(200 - c.z * 20) });
+    }
     function placeCat(c) {
-      const h = (0.55 * F) / c.z, w = h * c.ar;
-      const [x, yb] = project(c.X, YG, c.z);
       const el = document.createElement('div');
       el.className = 'scat' + (c.resident ? ' resident' : '');
-      Object.assign(el.style, { left: pct(x - w / 2, 1600), top: pct(yb - 500 - h, 900), width: pct(w, 1600), height: pct(h, 900), zIndex: Math.round(100 - c.z * 10) });
-      el.innerHTML = `<div class="walker" style="--spd:${(1.1 + Math.random() * 0.8).toFixed(2)}s"><img src="${c.src}" alt="${c.name}"></div><span class="tag"></span>`;
+      el.dataset.id = c.id;
+      el.innerHTML = `<div class="walker" style="--spd:${(1.1 + Math.random() * 0.8).toFixed(2)}s"><img src="${c.src}" alt="" draggable="false"></div><span class="tag"></span><button class="scat-x" type="button" aria-label="Remove ${c.name}">×</button>`;
       $('.tag', el).textContent = c.name;
+      $('img', el).alt = c.name;
+      layout(el, c);
+      $('.scat-x', el).addEventListener('click', (e) => {
+        e.stopPropagation();
+        cats = cats.filter((x) => x.id !== c.id); save(); renderStreet();
+        setStatus(`${c.name} left the gang.`);
+      });
+      // drag to move: left/right moves along the gang, up/down moves deeper (smaller) or closer (bigger)
+      el.addEventListener('pointerdown', (e) => {
+        if (e.target.closest('.scat-x')) return;
+        e.preventDefault();
+        el.setPointerCapture(e.pointerId);
+        el.classList.add('dragging');
+        const r = street.getBoundingClientRect();
+        const toStreet = (ev) => [((ev.clientX - r.left) / r.width) * 1600, ((ev.clientY - r.top) / r.height) * 900];
+        const [px0, py0] = toStreet(e);
+        const offX = px0 - c.sx, offY = py0 - groundY(c.z);
+        const move = (ev) => {
+          const [px, py] = toStreet(ev);
+          const feet = Math.min(groundY(Z_MIN), Math.max(groundY(Z_MAX), py - offY));
+          c.z = zFromY(feet);
+          c.sx = Math.min(1560, Math.max(40, px - offX));
+          layout(el, c);
+        };
+        const up = () => { el.classList.remove('dragging'); el.removeEventListener('pointermove', move); el.removeEventListener('pointerup', up); el.removeEventListener('pointercancel', up); save(); };
+        el.addEventListener('pointermove', move); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+      });
       street.appendChild(el);
-      return el;
     }
     function renderStreet() {
       $$('.scat', street).forEach((n) => n.remove());
-      [...residents, ...cats].forEach(placeCat);
-      $('#streetCount').textContent = `${cats.length} cat${cats.length === 1 ? '' : 's'} moved in`;
+      cats.forEach(placeCat);
+      $('#streetCount').textContent = `${cats.length} cat${cats.length === 1 ? '' : 's'} in the gang`;
     }
     renderStreet();
 
+    $('#clearCats').addEventListener('click', () => { cats = []; save(); renderStreet(); setStatus('All cats went home.'); });
+    $('#resetCats').addEventListener('click', () => {
+      const back = defaults().filter((d) => !cats.some((c) => c.id === d.id));
+      cats = back.concat(cats); save(); renderStreet();
+      setStatus(back.length ? 'Oyen and Belang are back!' : 'Oyen and Belang are already here.');
+    });
+
+    /* ---- upload ---- */
     const showPreview = (f) => { if (!f) return; preview.src = URL.createObjectURL(f); preview.hidden = false; dropText.hidden = true; };
     file.addEventListener('change', () => showPreview(file.files[0]));
     ['dragenter', 'dragover'].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add('over'); }));
@@ -350,22 +406,145 @@
         } else { throw new Error('skip'); }
       } catch (err) {
         if (err.message !== 'skip') console.warn(err);
-        if (err.message !== 'skip') setStatus("Couldn't remove the background here, so your cat gets a round sticker instead.");
         im = await loadImg(URL.createObjectURL(f)); oval = true;
       }
       const canvas = trimToCanvas(im, oval);
       let src = canvas.toDataURL('image/webp', 0.85);
       if (!src.startsWith('data:image/webp')) src = canvas.toDataURL('image/png');
-      const cat = { name, src, ar: canvas.width / canvas.height, z: 1.7 + Math.random() * 3.6, X: (Math.random() * 1.3 - 0.65) };
+      const z = 1.7 + Math.random() * 3.3;
+      const cat = { id: uid(), name, src, ar: canvas.width / canvas.height, z, sx: 800 + ((Math.random() * 1.3 - 0.65) * F) / z };
       cats.push(cat);
-      if (!store.set(KEY, cats)) { setStatus(`${name} moved in, but your browser storage is full, so it won't be remembered after reload.`); }
-      else setStatus(oval ? `${name} moved into the gang as a round sticker (background removal wasn't available). 🐾` : `${name} moved into the gang! 🐾`);
+      const msg = oval && $('#removeBg').checked ? `${name} moved into the gang as a round sticker (background removal wasn't available). 🐾` : `${name} moved into the gang! 🐾`;
+      setStatus(save() ? msg : `${name} moved in, but your browser storage is full, so it won't be remembered after reload.`);
       renderStreet();
       street.scrollIntoView({ behavior: 'smooth', block: 'center' });
       form.reset(); preview.hidden = true; dropText.hidden = false; $('#removeBg').checked = true;
       btn.disabled = false;
     });
-    $('#clearCats').addEventListener('click', () => { cats = []; store.set(KEY, cats); renderStreet(); setStatus('Your cats went home.'); });
+
+    /* ---- download your Cat's Gang ---- */
+    const dlBtn = $('#dlGangBtn'), menu = $('#dlMenu'), dlStatus = $('#dlStatus');
+    if (!CW.archiveUrl) $('#dlNote').hidden = true;
+    dlBtn.addEventListener('click', () => { menu.hidden = !menu.hidden; dlBtn.setAttribute('aria-expanded', String(!menu.hidden)); });
+    const imgCache = {};
+    const getImg = (src) => (imgCache[src] = imgCache[src] || loadImg(src));
+    const whiteCache = new Map();
+    function whiteVersion(im) {   // white silhouette, used to draw the sticker outline
+      if (whiteCache.has(im)) return whiteCache.get(im);
+      const c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight;
+      const x = c.getContext('2d'); x.drawImage(im, 0, 0); x.globalCompositeOperation = 'source-in'; x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height);
+      whiteCache.set(im, c); return c;
+    }
+    function roundRect(x, X, Y, W, H, R) { x.beginPath(); x.moveTo(X + R, Y); x.arcTo(X + W, Y, X + W, Y + H, R); x.arcTo(X + W, Y + H, X, Y + H, R); x.arcTo(X, Y + H, X, Y, R); x.arcTo(X, Y, X + W, Y, R); x.closePath(); }
+    function outlinedText(x, text, X, Y, size, fill, stroke, align = 'center') {
+      x.font = `900 ${size}px "Londrina Solid", sans-serif`; x.textAlign = align; x.textBaseline = 'alphabetic';
+      x.lineJoin = 'round'; x.lineWidth = size * 0.22; x.strokeStyle = stroke; x.strokeText(text, X, Y);
+      x.fillStyle = fill; x.fillText(text, X, Y);
+    }
+    // draw the street with all cats. scale = px per stage unit; ox, oy = where stage (0, CROP_Y) lands; phase = 0..1 for the waddle
+    async function drawCats(x, scale, ox, oy, phase) {
+      const order = [...cats].sort((a, b) => b.z - a.z);
+      for (const c of order) {
+        const im = await getImg(c.src), wv = whiteVersion(im);
+        const { h, w } = sizeOf(c);
+        const fx = ox + c.sx * scale, fy = oy + groundY(c.z) * scale, W = w * scale, H = h * scale;
+        const ang = phase === null ? 0 : Math.sin((phase + (c.sx % 97) / 97) * Math.PI * 2) * 0.05;
+        x.save(); x.translate(fx, fy); x.rotate(ang);
+        const o = Math.max(2, 2.5 * scale);
+        x.shadowColor = 'rgba(0,0,0,.22)'; x.shadowBlur = 10 * scale; x.shadowOffsetY = 6 * scale;
+        x.drawImage(wv, -W / 2, -H, W, H);
+        x.shadowColor = 'transparent';
+        for (const [dx, dy] of [[o, 0], [-o, 0], [0, o], [0, -o], [o, o], [-o, -o], [o, -o], [-o, o]]) x.drawImage(wv, -W / 2 + dx, -H + dy, W, H);
+        x.drawImage(im, -W / 2, -H, W, H);
+        x.restore();
+        // name tag
+        const fs = Math.max(14, Math.min(30, 34 * scale * (2.4 / c.z)));
+        x.font = `900 ${fs}px "Londrina Solid", sans-serif`;
+        const tw = x.measureText(c.name).width + fs;
+        const ty = fy - H - fs * 0.5;
+        roundRect(x, fx - tw / 2, ty - fs * 1.15, tw, fs * 1.4, fs * 0.7);
+        x.fillStyle = c.resident ? '#fff' : '#4B53E6'; x.fill();
+        x.fillStyle = c.resident ? '#2F5BD3' : '#fff'; x.textAlign = 'center'; x.fillText(c.name, fx, ty - fs * 0.05);
+      }
+    }
+    async function renderLandscape(W = 1600, phase = null) {
+      await document.fonts.load('900 40px "Londrina Solid"');
+      const s = W / 1600, H = Math.round(900 * s);
+      const c = document.createElement('canvas'); c.width = W; c.height = H;
+      const x = c.getContext('2d');
+      x.drawImage(await getImg(IMG('street')), 0, 0, W, H);
+      await drawCats(x, s, 0, 0, phase);
+      outlinedText(x, "MY CAT'S GANG", 36 * s, 92 * s, 76 * s, '#4B53E6', '#fff', 'left');
+      x.font = `500 ${22 * s}px "DM Sans", sans-serif`; x.textAlign = 'right'; x.fillStyle = 'rgba(255,255,255,.92)';
+      roundRect(x, W - 360 * s, H - 54 * s, 336 * s, 38 * s, 19 * s); x.fill();
+      x.fillStyle = '#2F5BD3'; x.fillText('CatWalking · a cat datawalk', W - 40 * s, H - 28 * s);
+      return c;
+    }
+    async function renderPortrait() {
+      await document.fonts.load('900 40px "Londrina Solid"');
+      const W = 1080, H = 1920, c = document.createElement('canvas'); c.width = W; c.height = H;
+      const x = c.getContext('2d');
+      x.fillStyle = '#F4EBDA'; x.fillRect(0, 0, W, H);
+      const grid = await getImg(IMG('grid'));
+      for (let gy = 0; gy < H; gy += 608) for (let gx = 0; gx < W; gx += 1080) x.drawImage(grid, gx, gy, 1080, 608);
+      outlinedText(x, "MY CAT'S", W / 2, 210, 150, '#4B53E6', '#fff');
+      outlinedText(x, 'GANG', W / 2, 360, 150, '#E8893A', '#fff');
+      const sq = 1000, X0 = (W - sq) / 2, Y0 = 430, s = sq / 1600;
+      x.save(); roundRect(x, X0, Y0, sq, sq, 36); x.clip();
+      x.drawImage(await getImg(IMG('street_full')), X0, Y0, sq, sq);
+      await drawCats(x, s, X0, Y0 + CROP_Y * s, null);
+      x.restore();
+      x.lineWidth = 8; x.strokeStyle = '#fff'; roundRect(x, X0, Y0, sq, sq, 36); x.stroke();
+      x.font = '500 40px "DM Sans", sans-serif'; x.textAlign = 'center'; x.fillStyle = '#2B2420';
+      const names = cats.map((k) => k.name).join(', ');
+      x.fillText(cats.length ? `${cats.length} cat${cats.length === 1 ? '' : 's'} live here:` : 'No cats here yet…', W / 2, 1530);
+      x.font = '900 46px "Londrina Solid", sans-serif'; x.fillStyle = '#4B53E6';
+      const words = names.split(' '); let line = '', ly = 1600;
+      for (const wd of words) { if (x.measureText(line + wd).width > 940) { x.fillText(line.trim(), W / 2, ly); line = ''; ly += 56; } line += wd + ' '; }
+      if (line.trim()) x.fillText(line.trim(), W / 2, ly);
+      x.font = '500 32px "DM Sans", sans-serif'; x.fillStyle = '#2F5BD3'; x.fillText('CatWalking · are all cats black or orange?', W / 2, 1840);
+      return c;
+    }
+    async function renderGif() {
+      const { GIFEncoder, quantize, applyPalette } = await import(new URL('assets/js/vendor/gifenc.esm.js', document.baseURI).href);
+      const gif = GIFEncoder(), frames = 12;
+      for (let i = 0; i < frames; i++) {
+        dlStatus.textContent = `Making your GIF… ${Math.round((i / frames) * 100)}%`;
+        const c = await renderLandscape(800, i / frames);
+        const data = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+        const palette = quantize(data, 256), index = applyPalette(data, palette);
+        gif.writeFrame(index, c.width, c.height, { palette, delay: 90 });
+        await new Promise((r) => setTimeout(r));
+      }
+      gif.finish();
+      return new Blob([gif.bytes()], { type: 'image/gif' });
+    }
+    const saveBlob = (blob, name) => {
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    };
+    const toBlob = (c, type = 'image/png', q) => new Promise((r) => c.toBlob(r, type, q));
+    async function archive(fmt) {   // send a landscape copy to the Drive archive (Apps Script web app)
+      if (!CW.archiveUrl) return;
+      try {
+        const c = await renderLandscape(1600, null);
+        const b64 = c.toDataURL('image/jpeg', 0.86).split(',')[1];
+        await fetch(CW.archiveUrl, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ format: fmt, cats: cats.length, image: b64 }) });
+      } catch (e) { console.warn('archive failed', e); }
+    }
+    $$('button', menu).forEach((b) => b.addEventListener('click', async () => {
+      const fmt = b.dataset.fmt;
+      menu.hidden = true; dlBtn.setAttribute('aria-expanded', 'false'); dlBtn.disabled = true;
+      dlStatus.textContent = 'Drawing your gang…';
+      try {
+        if (fmt === 'gif') saveBlob(await renderGif(), 'my-cats-gang.gif');
+        else if (fmt === 'portrait') saveBlob(await toBlob(await renderPortrait()), 'my-cats-gang-story.png');
+        else saveBlob(await toBlob(await renderLandscape(1600, null)), 'my-cats-gang.png');
+        dlStatus.textContent = 'Downloaded! 🐾';
+        archive(fmt);
+      } catch (e) { console.error(e); dlStatus.textContent = 'Sorry, the download did not work. Please try again.'; }
+      dlBtn.disabled = false;
+    }));
   })();
 
   /* ================= 8. LET'S DO THE CATWALK ================= */

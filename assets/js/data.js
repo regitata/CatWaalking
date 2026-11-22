@@ -4,6 +4,10 @@ window.CW = {
   // l = 2nd approach (A eats in front of me, B waits until I leave); h = 3rd approach (more = asks for more / follows me, eating = keeps eating)
   cats: [{"id": "48", "key": "black", "n": 3, "l": "A", "h": "more", "w": 40, "hh": 70}, {"id": "85", "key": "black", "n": 3, "l": "A", "h": "more", "w": 124, "hh": 58}, {"id": "86", "key": "black", "n": 3, "l": "A", "h": "more", "w": 31, "hh": 72}, {"id": "34", "key": "black", "n": 1, "l": "A", "h": "eating", "w": 51, "hh": 68}, {"id": "41", "key": "black", "n": 2, "l": "A", "h": "more", "w": 69, "hh": 66}, {"id": "87", "key": "tabby", "n": 1, "l": "A", "h": "more", "w": 92, "hh": 70}, {"id": "106", "key": "ginger", "n": 1, "l": "A", "h": "more", "w": 98, "hh": 78}, {"id": "107", "key": "ginger", "n": 2, "l": "B", "h": "eating", "w": 82, "hh": 74}, {"id": "114", "key": "ginger", "n": 1, "l": "B", "h": "eating", "w": 60, "hh": 72}, {"id": "163", "key": "tortie", "n": 1, "l": "B", "h": "eating", "w": 62, "hh": 62}, {"id": "140", "key": "tortie", "n": 3, "l": "A", "h": "more", "w": 30, "hh": 72}, {"id": "150", "key": "tortie", "n": 3, "l": "A", "h": "eating", "w": 38, "hh": 72}, {"id": "164", "key": "tortie", "n": 3, "l": "A", "h": "eating", "w": 38, "hh": 68}, {"id": "141", "key": "tortie", "n": 1, "l": "A", "h": "more", "w": 44, "hh": 74}, {"id": "165", "key": "tortie", "n": 2, "l": "B", "h": "eating", "w": 64, "hh": 60}, {"id": "133", "key": "tortie", "n": 2, "l": "A", "h": "eating", "w": 56, "hh": 53}, {"id": "143", "key": "tortie", "n": 3, "l": "A", "h": "eating", "w": 48, "hh": 68}, {"id": "142", "key": "tortie", "n": 3, "l": "A", "h": "more", "w": 23, "hh": 74}, {"id": "172", "key": "orwh", "n": 3, "l": "B", "h": "eating", "w": 72, "hh": 70}, {"id": "179", "key": "orwh", "n": 1, "l": "B", "h": "eating", "w": 74, "hh": 64}, {"id": "180", "key": "unknown", "n": 3, "l": "A", "h": "more", "w": 48, "hh": 72}, {"id": "182", "key": "white", "n": 1, "l": "B", "h": "eating", "w": 124, "hh": 63}],
   distanceKm: 1.2,
+  // Black vs orange split shown first in Our Result (percent)
+  blackOrange: { black: 68, orange: 32 },
+  // Google Apps Script web-app URL that saves a copy of each downloaded landscape picture to Drive (see tools/drive-archive.gs). Leave '' to switch off.
+  archiveUrl: '',
   categories: [
     { key: 'black',   label: 'Black / grey',            fill: '#1E1B1C', note: 'note_6' },
     { key: 'tabby',   label: 'Brown tabby',             fill: 'url(#p-tabby)', note: 'note_9' },
@@ -34,7 +38,7 @@ window.CW = {
   bobcats: [
     { img: 'route_cat_182', ar: 614/571, z: 1.75, X: -0.5,  hU: 0.62, flip: false, head: [81, 21, 19, 22, 80, 40], speed: 1.3 },
     { img: 'route_cat_174', ar: 728/687, z: 2.3,  X: 0.52,  hU: 0.6,  flip: true,  head: [77, 17, 15, 17, 77, 33], speed: 1.1 },
-    { img: 'route_cat_180', ar: 302/607, z: 3.3,  X: -0.8,  hU: 0.6,  flip: false, head: [54, 15, 14, 17, 52, 30], speed: 1.5, onFence: true },
+    { img: 'route_cat_180', ar: 302/607, z: 3.2,  X: -0.6,  hU: 0.6,  flip: false, head: [54, 15, 14, 17, 52, 30], speed: 1.5 },
     { img: 'route_cat_181', ar: 299/532, z: 4.0,  X: 0.28,  hU: 0.55, flip: false, head: [37, 27, 38, 28, 40, 52], speed: 1.2 },
     { img: 'route_cat_173', ar: 727/573, z: 6.0,  X: -0.2,  hU: 0.5,  flip: true,  head: [9, 12, 9, 13, 10, 24], speed: 0.9 }
   ]
